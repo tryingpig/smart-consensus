@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart Consensus</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E📈%3C/text%3E%3C/svg%3E">
+<style>
+  :root { --bg:#fff; --fg:#111; --muted:#8a8a8a; --line:#ececec; --hover:#f6f6f4;
+          --card:#fafafa; --up:#e0245e; --down:#2563eb; --flat:#9aa0a6; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0e0e0e; --fg:#f2f2f2; --muted:#8f8f8f; --line:#232323; --hover:#1a1a1a;
+            --card:#161616; --up:#ff5c8a; --down:#6ea8fe; --flat:#888; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",Roboto,sans-serif;
+    line-height:1.4; }
+  .wrap { max-width:1000px; margin:0 auto; padding:5vh 20px 12vh; }
+  a.back { color:var(--muted); text-decoration:none; font-size:.85rem; }
+  a.back:hover { color:var(--fg); }
+  h1 { font-size:clamp(1.6rem,4vw,2.4rem); font-weight:600; letter-spacing:-0.03em; margin:.6rem 0 .2rem; }
+  .sub { color:var(--muted); font-size:.9rem; }
+  .stats { display:flex; flex-wrap:wrap; gap:.6rem; margin:1.6rem 0 .5rem; }
+  .stat { background:var(--card); border:1px solid var(--line); border-radius:12px;
+          padding:.7rem 1rem; min-width:130px; }
+  .stat .k { color:var(--muted); font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; }
+  .stat .v { font-size:1.15rem; font-weight:600; font-variant-numeric:tabular-nums; margin-top:.15rem; }
+  .stat .v.up { color:var(--up); } .stat .v.down { color:var(--down); }
+  h2 { font-size:1.05rem; font-weight:600; margin:2.6rem 0 .3rem; letter-spacing:-0.01em; }
+  .hint { color:var(--muted); font-size:.78rem; margin-bottom:.8rem; }
+  .chartbox { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; }
+  .chartbox.tall { height:420px; } .chartbox.mid { height:460px; }
+  canvas { width:100% !important; }
+  .note { color:var(--muted); font-size:.85rem; padding:2rem; text-align:center; }
+  .legend-tip { font-size:.75rem; color:var(--muted); margin-top:.5rem; }
+  .legend-tip b.up { color:var(--up); } .legend-tip b.down { color:var(--down); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="index.html">← 종목 목록</a>
+    <h1 id="title">…</h1>
+    <div class="sub" id="sub"></div>
+    <div class="stats" id="stats"></div>
+
+    <h2>주가 &amp; 목표주가 변경 시점</h2>
+    <div class="hint">주가 위 마커 = 증권사가 목표가를 변경한 날 (<b class="up">▲ 상향</b> · <b class="down">▼ 하향</b> · • 신규/유지). 마커에 커서를 올리면 상세.</div>
+    <div class="chartbox tall" id="boxA"><canvas id="chartA"></canvas></div>
+    <div class="legend-tip"><b class="up">▲</b> 상향 &nbsp; <b class="down">▼</b> 하향</div>
+
+    <h2>증권사별 목표주가 추이</h2>
+    <div class="hint">증권사마다 목표가 변화 궤적. 범례를 클릭하면 개별 증권사를 켜고 끌 수 있어요.</div>
+    <div class="chartbox mid" id="boxB"><canvas id="chartB"></canvas></div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+<script>
+const PALETTE = ["#2563eb","#e0245e","#16a34a","#f59e0b","#8b5cf6","#0891b2","#db2777","#65a30d",
+  "#ea580c","#0d9488","#7c3aed","#ca8a04","#dc2626","#059669","#4f46e5","#d946ef","#0284c7",
+  "#facc15","#be123c","#15803d","#9333ea","#c2410c","#1d4ed8","#a16207"];
+
+const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+const GRID = dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
+const TICK = dark ? '#9a9a9a' : '#888';
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+const won = (n) => (n==null? '—' : Number(n).toLocaleString('ko-KR') + '원');
+const pad = (n) => String(n).padStart(2,'0');
+const fmtMs = (ms) => { const d=new Date(ms); return `${String(d.getFullYear()).slice(2)}.${pad(d.getMonth()+1)}`; };
+const fmtDay = (ms) => { const d=new Date(ms); return `${String(d.getFullYear()).slice(2)}.${pad(d.getMonth()+1)}.${pad(d.getDate())}`; };
+
+function trimmedMean(vals){
+  if(vals.length<3) return vals.length? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):null;
+  const s=[...vals].sort((a,b)=>a-b).slice(1,-1);
+  return Math.round(s.reduce((a,b)=>a+b,0)/s.length);
+}
+
+(async function(){
+  const code = new URLSearchParams(location.search).get('code');
+  const titleEl=document.getElementById('title'), subEl=document.getElementById('sub');
+  if(!code){ titleEl.textContent='종목 코드가 없습니다'; return; }
+  let data;
+  try { data = await fetch(`data/${code}.json?_=`+Date.now()).then(r=>r.json()); }
+  catch(e){ titleEl.textContent='데이터를 불러오지 못했습니다'; return; }
+
+  const price = (data.price||[]);
+  const reports = (data.reports||[]).slice().sort((a,b)=> a.date<b.date?-1: a.date>b.date?1:0);
+
+  titleEl.textContent = data.name || code;
+  subEl.textContent = `${data.sector||''} · ${code}` + (data.updated? ` · 갱신 ${data.updated}`:'');
+
+  // ---- 통계 ----
+  const curClose = price.length? price[price.length-1].close : null;
+  const latestByBroker = {};
+  reports.forEach(r=>{ latestByBroker[r.broker] = r.target; }); // reports는 날짜 오름차순 → 마지막이 최신
+  const brokers = Object.keys(latestByBroker);
+  const avgTarget = trimmedMean(Object.values(latestByBroker));
+  const upside = (avgTarget && curClose)? Math.round((avgTarget/curClose-1)*1000)/10 : null;
+  const statHtml = [
+    ['현재가', won(curClose)],
+    ['목표가 평균', won(avgTarget) + (brokers.length? ` <span style="color:var(--muted);font-size:.7rem">(${brokers.length}사)</span>`:'')],
+    ['상승여력', upside==null? '—' : `<span class="${upside>=0?'up':'down'}">${upside>=0?'+':''}${upside}%</span>`, true],
+    ['리포트', `${reports.length}건`],
+  ];
+  document.getElementById('stats').innerHTML = statHtml.map(([k,v])=>
+    `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+
+  // ---- 차트 A: 주가 + 목표가 변경 마커 ----
+  const boxA = document.getElementById('boxA');
+  if(!price.length){
+    boxA.innerHTML = '<div class="note">이 종목은 epic에 주가 시계열이 없어 주가 차트를 표시할 수 없습니다.<br>아래 증권사별 목표주가 추이는 정상 표시됩니다.</div>';
+  } else {
+    const pricePts = price.map(p=>({x:Date.parse(p.date), y:p.close}));
+    const priceAsc = price.map(p=>({t:Date.parse(p.date), c:p.close}));
+    const priceOn = (dateStr)=>{ const t=Date.parse(dateStr); let best=null;
+      for(const p of priceAsc){ if(p.t<=t) best=p.c; else break; } return best; };
+
+    // 증권사별로 직전 목표가 대비 방향 계산 → 마커
+    const byBroker = {};
+    reports.forEach(r=>{ (byBroker[r.broker]=byBroker[r.broker]||[]).push(r); });
+    const mk = {x:[],y:[],bg:[],style:[],rot:[],meta:[]};
+    for(const b in byBroker){
+      const arr = byBroker[b];
+      arr.forEach((r,i)=>{
+        const y = priceOn(r.date); if(y==null) return;
+        const prev = i>0? arr[i-1].target : null;
+        let dir = 'flat';
+        if(prev!=null) dir = r.target>prev?'up': r.target<prev?'down':'flat';
+        mk.x.push(Date.parse(r.date)); mk.y.push(y);
+        mk.bg.push(dir==='up'?css('--up'):dir==='down'?css('--down'):css('--flat'));
+        mk.style.push(dir==='flat'?'circle':'triangle');
+        mk.rot.push(dir==='down'?180:0);
+        mk.meta.push({b, target:r.target, prev, dir, date:r.date});
+      });
+    }
+    const markerData = mk.x.map((x,i)=>({x, y:mk.y[i], _m:mk.meta[i]}));
+
+    new Chart(document.getElementById('chartA'), {
+      type:'line',
+      data:{ datasets:[
+        { label:'주가', data:pricePts, borderColor:css('--muted'), borderWidth:1.5,
+          pointRadius:0, tension:0.1, order:2 },
+        { label:'목표가 변경', data:markerData, showLine:false, order:1,
+          pointRadius:6, pointHoverRadius:8,
+          pointBackgroundColor:mk.bg, pointBorderColor:mk.bg,
+          pointStyle:mk.style, rotation:mk.rot },
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false, animation:false,
+        interaction:{ mode:'nearest', intersect:true },
+        plugins:{ legend:{display:false},
+          tooltip:{ callbacks:{
+            title:(items)=> fmtDay(items[0].parsed.x),
+            label:(ctx)=>{ const m=ctx.raw._m; if(!m) return '주가 '+won(ctx.parsed.y);
+              const arrow = m.dir==='up'?'▲':m.dir==='down'?'▼':'•';
+              const chg = m.prev!=null? `  (${m.target-m.prev>=0?'+':''}${(m.target-m.prev).toLocaleString('ko-KR')})`:'';
+              return [`${m.b} ${arrow}`, `목표가 ${won(m.target)}${chg}`]; } } } },
+        scales:{
+          x:{ type:'linear', ticks:{ color:TICK, callback:(v)=>fmtMs(v), maxRotation:0, autoSkip:true, maxTicksLimit:10 },
+              grid:{ color:GRID } },
+          y:{ ticks:{ color:TICK, callback:(v)=>Number(v).toLocaleString('ko-KR') }, grid:{ color:GRID } },
+        } }
+    });
+  }
+
+  // ---- 차트 B: 증권사별 목표주가 추이 ----
+  const byBrokerT = {};
+  reports.forEach(r=>{ (byBrokerT[r.broker]=byBrokerT[r.broker]||[]).push({x:Date.parse(r.date), y:r.target}); });
+  const brokerNames = Object.keys(byBrokerT).sort((a,b)=> byBrokerT[b].length - byBrokerT[a].length);
+  const dsB = brokerNames.map((b,i)=>({
+    label:b, data:byBrokerT[b], borderColor:PALETTE[i%PALETTE.length],
+    backgroundColor:PALETTE[i%PALETTE.length], borderWidth:1.8, tension:0,
+    pointRadius:3, pointHoverRadius:5, stepped:false,
+  }));
+  new Chart(document.getElementById('chartB'), {
+    type:'line',
+    data:{ datasets:dsB },
+    options:{ responsive:true, maintainAspectRatio:false, animation:false,
+      interaction:{ mode:'nearest', intersect:false },
+      plugins:{ legend:{ position:'bottom', labels:{ color:TICK, boxWidth:12, boxHeight:12,
+                  usePointStyle:true, font:{size:11} } },
+        tooltip:{ callbacks:{
+          title:(items)=> fmtDay(items[0].parsed.x),
+          label:(ctx)=> `${ctx.dataset.label}: ${won(ctx.parsed.y)}` } } },
+      scales:{
+        x:{ type:'linear', ticks:{ color:TICK, callback:(v)=>fmtMs(v), maxRotation:0, autoSkip:true, maxTicksLimit:10 },
+            grid:{ color:GRID } },
+        y:{ ticks:{ color:TICK, callback:(v)=>Number(v).toLocaleString('ko-KR') }, grid:{ color:GRID } },
+      } }
+  });
+})();
+</script>
+</body>
+</html>

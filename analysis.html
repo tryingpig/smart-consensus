@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart Consensus · 리딩 분석</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E📈%3C/text%3E%3C/svg%3E">
+<style>
+  :root { --bg:#fff; --fg:#111; --muted:#8a8a8a; --line:#ececec; --hover:#f6f6f4;
+          --card:#fafafa; --pos:#16a34a; --neg:#dc2626; --accent:#2563eb; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0e0e0e; --fg:#f2f2f2; --muted:#8f8f8f; --line:#232323; --hover:#1a1a1a;
+            --card:#161616; --pos:#4ade80; --neg:#f87171; --accent:#6ea8fe; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",Roboto,sans-serif;
+    line-height:1.4; }
+  .wrap { max-width:780px; margin:0 auto; padding:5vh 20px 12vh; }
+  a.back { color:var(--muted); text-decoration:none; font-size:.85rem; }
+  a.back:hover { color:var(--fg); }
+  h1 { font-size:clamp(1.6rem,4vw,2.4rem); font-weight:600; letter-spacing:-0.03em; margin:.6rem 0 .2rem; }
+  .sub { color:var(--muted); font-size:.9rem; max-width:60ch; }
+  .controls { display:flex; flex-wrap:wrap; gap:.8rem; align-items:center; margin:1.8rem 0 1rem; }
+  .seg { display:inline-flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  .seg button { border:0; background:transparent; color:var(--muted); padding:.5rem .9rem;
+    font-size:.85rem; cursor:pointer; font-weight:500; }
+  .seg button.on { background:var(--accent); color:#fff; }
+  .seg .lbl { padding:.5rem .7rem; color:var(--muted); font-size:.72rem; align-self:center;
+    text-transform:uppercase; letter-spacing:.06em; }
+  .metricdesc { color:var(--muted); font-size:.82rem; margin:.2rem 0 1.2rem; min-height:1.2em; }
+  table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+  th,td { padding:.65rem .5rem; text-align:right; border-bottom:1px solid var(--line); font-size:.9rem; }
+  th { color:var(--muted); font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; font-weight:600; }
+  td.rank { color:var(--muted); text-align:center; width:2.5rem; }
+  td.broker { text-align:left; font-weight:600; }
+  td.score { font-weight:700; font-size:1rem; }
+  .pos { color:var(--pos); } .neg { color:var(--neg); }
+  .barcell { width:34%; }
+  .bar { height:8px; border-radius:4px; background:var(--accent); opacity:.85; }
+  .bar.neg { background:var(--neg); }
+  .note { color:var(--muted); font-size:.78rem; margin-top:2rem; line-height:1.6; }
+  .empty { padding:3rem; text-align:center; color:var(--muted); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="index.html">← 종목 목록</a>
+    <h1>증권사 리딩 분석</h1>
+    <div class="sub">증권사가 목표주가를 <b>상향</b>한 시점을 기준으로, 전 종목에 걸쳐 그 이후 주가 흐름을 집계해 증권사를 순위화합니다.</div>
+
+    <div class="controls">
+      <div class="seg" id="metricSeg">
+        <span class="lbl">지표</span>
+        <button data-m="react" class="on">반응성</button>
+        <button data-m="lead">선행성</button>
+      </div>
+      <div class="seg" id="winSeg">
+        <span class="lbl">기간</span>
+        <button data-w="5">5일</button>
+        <button data-w="20" class="on">20일</button>
+      </div>
+      <div class="seg" id="minSeg">
+        <span class="lbl">최소 이벤트</span>
+        <button data-n="3">3</button>
+        <button data-n="5" class="on">5</button>
+        <button data-n="10">10</button>
+      </div>
+    </div>
+    <div class="metricdesc" id="metricDesc"></div>
+
+    <table id="tbl"><tbody><tr><td class="empty">데이터 집계 중…</td></tr></tbody></table>
+
+    <div class="note" id="note"></div>
+  </div>
+
+<script>
+const state = { metric:'react', window:20, minN:5 };
+const cache = {};  // window -> rows
+const pct = (x) => (x>=0?'+':'') + (x*100).toFixed(1) + '%';
+const avg = (a) => a.length? a.reduce((s,v)=>s+v,0)/a.length : 0;
+
+async function loadAll(){
+  const idx = await fetch('data/index.json?_='+Date.now()).then(r=>r.json());
+  const codes = (idx.companies||[]).map(c=>c.code);
+  const datas = await Promise.all(codes.map(c=>
+    fetch(`data/${c}.json`).then(r=>r.json()).catch(()=>null)));
+  return datas.filter(d=>d && (d.price||[]).length);
+}
+
+function compute(datas, N){
+  const agg = {};  // broker -> {react:[], lead:[]}
+  for(const d of datas){
+    const price = d.price||[];
+    if(price.length < N+2) continue;
+    const closes = price.map(p=>p.close);
+    const times = price.map(p=>Date.parse(p.date));
+    const idxOf = (dateStr)=>{ const t=Date.parse(dateStr); let bi=-1;
+      for(let i=0;i<times.length;i++){ if(times[i]<=t) bi=i; else break; } return bi; };
+    const byBroker = {};
+    (d.reports||[]).forEach(r=>{ (byBroker[r.broker]=byBroker[r.broker]||[]).push(r); });
+    for(const b in byBroker){
+      const arr = byBroker[b].slice().sort((x,y)=> x.date<y.date?-1: x.date>y.date?1:0);
+      for(let i=1;i<arr.length;i++){
+        if(arr[i].target > arr[i-1].target){           // 목표가 상향 이벤트
+          const ei = idxOf(arr[i].date);
+          if(ei < N || ei + N > closes.length-1) continue;  // 전/후 윈도우 확보된 것만
+          const p0=closes[ei], pre=closes[ei-N], post=closes[ei+N];
+          if(!p0||!pre) continue;
+          const postRet = post/p0 - 1;
+          const preRet  = p0/pre - 1;
+          (agg[b]=agg[b]||{react:[],lead:[]});
+          agg[b].react.push(postRet);          // 반응성: 상향 후 수익률
+          agg[b].lead.push(postRet - preRet);  // 선행성: 상향 후 − 상향 전
+        }
+      }
+    }
+  }
+  return Object.keys(agg).map(b=>({
+    broker:b, n:agg[b].react.length,
+    react:avg(agg[b].react), lead:avg(agg[b].lead),
+  }));
+}
+
+function render(){
+  const rows = (cache[state.window] || []).filter(r=>r.n >= state.minN);
+  const m = state.metric;
+  rows.sort((a,b)=> b[m]-a[m]);
+  const maxAbs = Math.max(0.0001, ...rows.map(r=>Math.abs(r[m])));
+
+  const desc = {
+    react: `반응성 = 목표가 상향 <b>후 ${state.window}거래일</b> 평균 주가수익률. 높을수록 "이 증권사가 올리면 주가가 뒤따라 오른다".`,
+    lead:  `선행성 = (상향 후 ${state.window}일 수익률) − (상향 <b>전</b> ${state.window}일 수익률). 양수(+)면 주가가 오르기 <b>전에</b> 먼저 올림(선행), 음수(−)면 이미 오른 뒤 따라 올림(후행).`,
+  }[m];
+  document.getElementById('metricDesc').innerHTML = desc;
+
+  const other = m==='react'?'lead':'react';
+  const otherLbl = m==='react'?'선행성':'반응성';
+  const mLbl = m==='react'?'반응성':'선행성';
+  if(!rows.length){ document.querySelector('#tbl tbody').innerHTML =
+    `<tr><td class="empty">최소 이벤트 ${state.minN}건 이상인 증권사가 없습니다. 기준을 낮춰보세요.</td></tr>`; return; }
+
+  const head = `<tr><th class="rank">#</th><th style="text-align:left">증권사</th>
+    <th>${mLbl}(${state.window}일)</th><th class="barcell"></th>
+    <th>${otherLbl}</th><th>이벤트</th></tr>`;
+  const body = rows.map((r,i)=>{
+    const v=r[m]; const w=Math.round(Math.abs(v)/maxAbs*100);
+    const cls=v>=0?'pos':'neg';
+    return `<tr>
+      <td class="rank">${i+1}</td>
+      <td class="broker">${r.broker}</td>
+      <td class="score ${cls}">${pct(v)}</td>
+      <td class="barcell"><div class="bar ${v<0?'neg':''}" style="width:${w}%"></div></td>
+      <td class="${r[other]>=0?'pos':'neg'}">${pct(r[other])}</td>
+      <td>${r.n}</td>
+    </tr>`;
+  }).join('');
+  document.querySelector('#tbl').innerHTML = `<thead>${head}</thead><tbody>${body}</tbody>`;
+}
+
+function wireSeg(id, key, cast){
+  document.querySelectorAll(`#${id} button`).forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll(`#${id} button`).forEach(b=>b.classList.remove('on'));
+      btn.classList.add('on');
+      state[key] = cast(btn.dataset[Object.keys(btn.dataset)[0]]);
+      render();
+    });
+  });
+}
+
+(async function(){
+  wireSeg('metricSeg','metric',v=>v);
+  wireSeg('winSeg','window',v=>parseInt(v));
+  wireSeg('minSeg','minN',v=>parseInt(v));
+  let datas;
+  try { datas = await loadAll(); }
+  catch(e){ document.querySelector('#tbl tbody').innerHTML='<tr><td class="empty">데이터 로드 실패</td></tr>'; return; }
+  cache[5]  = compute(datas, 5);
+  cache[20] = compute(datas, 20);
+  const totalEvents = (cache[20]||[]).reduce((s,r)=>s+r.n,0);
+  document.getElementById('note').innerHTML =
+    `집계 대상: 주가 데이터가 있는 ${datas.length}개 종목의 목표가 상향 이벤트. `+
+    `표시 지표 기준 상향 이벤트 합계 약 ${totalEvents}건(20일 기준). `+
+    `상향 전/후 윈도우가 확보된 이벤트만 사용하므로 최근 ${'약 1개월'} 내 상향은 후(後)수익률 계산에서 제외됩니다. `+
+    `이벤트 수가 적은 증권사는 표본이 작아 변동성이 큽니다(최소 이벤트 기준으로 필터).`;
+  render();
+})();
+</script>
+</body>
+</html>

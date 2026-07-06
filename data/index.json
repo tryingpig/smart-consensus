@@ -1,4 +1,23 @@
 {
-  "updated": null,
-  "companies": []
+  "updated": "2026-07-06",
+  "companies": [
+    {
+      "code": "000660",
+      "name": "SK하이닉스",
+      "sector": "반도체",
+      "reports": 49
+    },
+    {
+      "code": "005930",
+      "name": "삼성전자",
+      "sector": "반도체",
+      "reports": 50
+    },
+    {
+      "code": "012330",
+      "name": "현대모비스",
+      "sector": "자동차부품",
+      "reports": 31
+    }
+  ]
 }

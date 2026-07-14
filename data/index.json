@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-06",
+  "updated": "2026-07-15",
   "companies": [
     {
       "code": "028260",
@@ -11,19 +11,19 @@
       "code": "267260",
       "name": "HD현대일렉트릭",
       "sector": "기계",
-      "reports": 18
+      "reports": 26
     },
     {
       "code": "010120",
       "name": "LS ELECTRIC",
       "sector": "기계",
-      "reports": 29
+      "reports": 32
     },
     {
       "code": "000150",
       "name": "두산",
       "sector": "기계",
-      "reports": 20
+      "reports": 26
     },
     {
       "code": "034020",
@@ -35,85 +35,85 @@
       "code": "298040",
       "name": "효성중공업",
       "sector": "기계",
-      "reports": 23
+      "reports": 27
     },
     {
       "code": "352820",
       "name": "하이브",
       "sector": "미디어및엔터테인먼트",
-      "reports": 28
+      "reports": 36
     },
     {
       "code": "000660",
       "name": "SK하이닉스",
       "sector": "반도체",
-      "reports": 49
+      "reports": 64
     },
     {
       "code": "005930",
       "name": "삼성전자",
       "sector": "반도체",
-      "reports": 50
+      "reports": 54
     },
     {
       "code": "062040",
       "name": "산일전기",
       "sector": "발전및송배전",
-      "reports": 25
+      "reports": 27
     },
     {
       "code": "010950",
       "name": "S-Oil",
       "sector": "에너지",
-      "reports": 23
+      "reports": 33
     },
     {
       "code": "005380",
       "name": "현대차",
       "sector": "완성차",
-      "reports": 31
+      "reports": 58
     },
     {
       "code": "003230",
       "name": "삼양식품",
       "sector": "음식료",
-      "reports": 16
+      "reports": 24
     },
     {
       "code": "006400",
       "name": "삼성SDI",
       "sector": "이차전지재료및장비",
-      "reports": 24
+      "reports": 34
     },
     {
       "code": "066970",
       "name": "엘앤에프",
       "sector": "이차전지재료및장비",
-      "reports": 28
+      "reports": 30
     },
     {
       "code": "035420",
       "name": "NAVER",
       "sector": "인터넷",
-      "reports": 27
+      "reports": 37
     },
     {
       "code": "012330",
       "name": "현대모비스",
       "sector": "자동차부품",
-      "reports": 31
+      "reports": 55
     },
     {
       "code": "066570",
       "name": "LG전자",
       "sector": "전자부품",
-      "reports": 24
+      "reports": 26
     },
     {
       "code": "009150",
       "name": "삼성전기",
       "sector": "전자부품",
-      "reports": 43
+      "reports": 57
     },
     {
       "code": "207940",
@@ -137,7 +137,7 @@
       "code": "329180",
       "name": "HD현대중공업",
       "sector": "조선",
-      "reports": 28
+      "reports": 30
     },
     {
       "code": "439260",
@@ -149,49 +149,49 @@
       "code": "010140",
       "name": "삼성중공업",
       "sector": "조선",
-      "reports": 18
+      "reports": 26
     },
     {
       "code": "082740",
       "name": "한화엔진",
       "sector": "조선",
-      "reports": 14
+      "reports": 15
     },
     {
       "code": "042660",
       "name": "한화오션",
       "sector": "조선",
-      "reports": 25
+      "reports": 35
     },
     {
       "code": "006800",
       "name": "미래에셋증권",
       "sector": "증권",
-      "reports": 21
+      "reports": 26
     },
     {
       "code": "402340",
       "name": "SK스퀘어",
       "sector": "지주회사",
-      "reports": 3
+      "reports": 4
     },
     {
       "code": "005490",
       "name": "POSCO홀딩스",
       "sector": "철강",
-      "reports": 30
+      "reports": 39
     },
     {
       "code": "017670",
       "name": "SK텔레콤",
       "sector": "통신서비스",
-      "reports": 23
+      "reports": 35
     },
     {
       "code": "011070",
       "name": "LG이노텍",
       "sector": "핸드셋",
-      "reports": 39
+      "reports": 53
     }
   ]
 }

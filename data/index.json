@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-13",
+  "updated": "2026-10-14",
   "companies": [
     {
       "code": "375500",
@@ -83,7 +83,7 @@
       "code": "298040",
       "name": "효성중공업",
       "sector": "기계",
-      "reports": 58
+      "reports": 59
     },
     {
       "code": "352820",
@@ -203,7 +203,7 @@
       "code": "006400",
       "name": "삼성SDI",
       "sector": "이차전지재료및장비",
-      "reports": 108
+      "reports": 114
     },
     {
       "code": "066970",
@@ -221,7 +221,7 @@
       "code": "012330",
       "name": "현대모비스",
       "sector": "자동차부품",
-      "reports": 139
+      "reports": 143
     },
     {
       "code": "015760",
@@ -293,13 +293,13 @@
       "code": "071970",
       "name": "HD현대마린엔진",
       "sector": "조선",
-      "reports": 19
+      "reports": 20
     },
     {
       "code": "329180",
       "name": "HD현대중공업",
       "sector": "조선",
-      "reports": 61
+      "reports": 63
     },
     {
       "code": "439260",
@@ -311,19 +311,19 @@
       "code": "010140",
       "name": "삼성중공업",
       "sector": "조선",
-      "reports": 61
+      "reports": 64
     },
     {
       "code": "082740",
       "name": "한화엔진",
       "sector": "조선",
-      "reports": 28
+      "reports": 29
     },
     {
       "code": "042660",
       "name": "한화오션",
       "sector": "조선",
-      "reports": 63
+      "reports": 66
     },
     {
       "code": "006800",
@@ -353,13 +353,13 @@
       "code": "005490",
       "name": "POSCO홀딩스",
       "sector": "철강",
-      "reports": 70
+      "reports": 74
     },
     {
       "code": "017670",
       "name": "SK텔레콤",
       "sector": "통신서비스",
-      "reports": 88
+      "reports": 90
     },
     {
       "code": "003490",

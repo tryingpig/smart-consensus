@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-14",
+  "updated": "2026-10-15",
   "companies": [
     {
       "code": "375500",
@@ -65,7 +65,7 @@
       "code": "000150",
       "name": "두산",
       "sector": "기계",
-      "reports": 45
+      "reports": 47
     },
     {
       "code": "034020",
@@ -83,13 +83,13 @@
       "code": "298040",
       "name": "효성중공업",
       "sector": "기계",
-      "reports": 59
+      "reports": 60
     },
     {
       "code": "352820",
       "name": "하이브",
       "sector": "미디어및엔터테인먼트",
-      "reports": 80
+      "reports": 82
     },
     {
       "code": "145020",
@@ -137,7 +137,7 @@
       "code": "062040",
       "name": "산일전기",
       "sector": "발전및송배전",
-      "reports": 47
+      "reports": 48
     },
     {
       "code": "010130",
@@ -155,7 +155,7 @@
       "code": "010950",
       "name": "S-Oil",
       "sector": "에너지",
-      "reports": 49
+      "reports": 50
     },
     {
       "code": "096770",
@@ -167,7 +167,7 @@
       "code": "005380",
       "name": "현대차",
       "sector": "완성차",
-      "reports": 173
+      "reports": 174
     },
     {
       "code": "051500",
@@ -209,19 +209,19 @@
       "code": "066970",
       "name": "엘앤에프",
       "sector": "이차전지재료및장비",
-      "reports": 49
+      "reports": 50
     },
     {
       "code": "035420",
       "name": "NAVER",
       "sector": "인터넷",
-      "reports": 78
+      "reports": 80
     },
     {
       "code": "012330",
       "name": "현대모비스",
       "sector": "자동차부품",
-      "reports": 143
+      "reports": 149
     },
     {
       "code": "015760",
@@ -299,7 +299,7 @@
       "code": "329180",
       "name": "HD현대중공업",
       "sector": "조선",
-      "reports": 63
+      "reports": 64
     },
     {
       "code": "439260",
@@ -317,19 +317,19 @@
       "code": "082740",
       "name": "한화엔진",
       "sector": "조선",
-      "reports": 29
+      "reports": 30
     },
     {
       "code": "042660",
       "name": "한화오션",
       "sector": "조선",
-      "reports": 66
+      "reports": 67
     },
     {
       "code": "006800",
       "name": "미래에셋증권",
       "sector": "증권",
-      "reports": 45
+      "reports": 46
     },
     {
       "code": "010060",
@@ -359,7 +359,7 @@
       "code": "017670",
       "name": "SK텔레콤",
       "sector": "통신서비스",
-      "reports": 90
+      "reports": 92
     },
     {
       "code": "003490",

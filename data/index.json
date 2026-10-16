@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-15",
+  "updated": "2026-10-16",
   "companies": [
     {
       "code": "375500",
@@ -71,7 +71,7 @@
       "code": "034020",
       "name": "두산에너빌리티",
       "sector": "기계",
-      "reports": 42
+      "reports": 44
     },
     {
       "code": "083650",
@@ -89,7 +89,7 @@
       "code": "352820",
       "name": "하이브",
       "sector": "미디어및엔터테인먼트",
-      "reports": 82
+      "reports": 84
     },
     {
       "code": "145020",
@@ -167,7 +167,7 @@
       "code": "005380",
       "name": "현대차",
       "sector": "완성차",
-      "reports": 174
+      "reports": 175
     },
     {
       "code": "051500",
@@ -185,7 +185,7 @@
       "code": "003230",
       "name": "삼양식품",
       "sector": "음식료",
-      "reports": 51
+      "reports": 53
     },
     {
       "code": "007310",
@@ -221,7 +221,7 @@
       "code": "012330",
       "name": "현대모비스",
       "sector": "자동차부품",
-      "reports": 149
+      "reports": 152
     },
     {
       "code": "015760",
@@ -323,13 +323,13 @@
       "code": "042660",
       "name": "한화오션",
       "sector": "조선",
-      "reports": 67
+      "reports": 68
     },
     {
       "code": "006800",
       "name": "미래에셋증권",
       "sector": "증권",
-      "reports": 46
+      "reports": 47
     },
     {
       "code": "010060",
@@ -359,7 +359,7 @@
       "code": "017670",
       "name": "SK텔레콤",
       "sector": "통신서비스",
-      "reports": 92
+      "reports": 94
     },
     {
       "code": "003490",
